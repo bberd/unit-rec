@@ -12,7 +12,7 @@ module.exports = class Portfolio {
     this.assets = reconIn.parsedPos.d0Pos;
     this.d1Pos = reconIn.parsedPos.d1Pos;
     this.d1Trn = reconIn.parsedTrn;
-    console.log('\nparsedD0Pos\n', this.d0Pos, '\nparsedD1Pos\n', this.d1Pos, '\nparsedD1Trn\n', this.d1Trn)
+    console.log('\nparsedD1Pos\n', this.d1Pos)
   }
 
   applyTransactions() {
