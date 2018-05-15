@@ -6,5 +6,5 @@ console.log('\nReconiliation\n', Portfolio);
 const rec = new Portfolio(reconIn);
 rec.parseInput();
 rec.applyTransactions();
-//rec.reconcile();
+rec.reconcile();
 

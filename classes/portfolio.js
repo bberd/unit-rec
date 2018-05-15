@@ -5,6 +5,9 @@ const Asset = require('./asset');
 module.exports = class Portfolio {
   constructor(_input) {
     this.input = _input;
+    this.assets = {};
+    this.d1Pos = {};
+    this.d1Trn = [];
   }
 
   parseInput(inputJSON) {
@@ -43,10 +46,29 @@ module.exports = class Portfolio {
       else handleTrnStock(trans);
     }
 
-    console.log('$^^^^$^^^$^^^$', this.assets);
+    console.log('$^^^^$^^^$^^^$\n', this.assets);
   }
 
   reconcile() {
+    const reconOut = [];
 
+    function addDiffsToResult(amtDiff, symbol) {
+      if (Math.abs(amtDiff) !== 0) {
+        reconOut.push(symbol + " " + amtDiff);
+      }
+    }
+
+    for (let asset in this.assets) {
+      const amtDiff = this.d1Pos[asset]
+        ? this.d1Pos[asset].amount - this.assets[asset].amount
+        : -this.assets[asset].amount;
+      addDiffsToResult(amtDiff, this.assets[asset].symbol)
+      delete this.d1Pos[asset];
+    }
+
+    for (let pos in this.d1Pos) {
+      addDiffsToResult(this.d1Pos[pos].amount, this.d1Pos[pos].symbol)
+    }
+    console.log('!!!!', reconOut)
   };
 }
