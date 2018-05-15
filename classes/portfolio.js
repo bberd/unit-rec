@@ -1,24 +1,24 @@
 
-const Input = require('./input');
+const RecData = require('./rec-data');
 const Asset = require('./asset');
 
 module.exports = class Portfolio {
-  constructor(_input) {
-    this.input = _input;
+  constructor() {
     this.assets = {};
     this.d1Pos = {};
     this.d1Trn = [];
+    this.recData = new RecData();
   }
 
-  parseInput(inputJSON) {
-    const reconIn = new Input(this.input);
-    this.assets = reconIn.parsedPos.d0Pos;
-    this.d1Pos = reconIn.parsedPos.d1Pos;
-    this.d1Trn = reconIn.parsedTrn;
-    console.log('\nparsedD1Pos\n', this.d1Pos)
+  async parseInput() {
+    await this.recData.import();
+    this.recData.parse();
+    this.assets = this.recData.parsedPos.d0Pos;
+    this.d1Pos = this.recData.parsedPos.d1Pos;
+    this.d1Trn = this.recData.parsedTrn;
   }
 
-  applyTransactions() {
+  applyTransactionsToD0() {
     const handleTrnCash = trans => {
       if (trans.type === 'DEPOSIT' || trans.type === 'DIVIDEND') {
         this.assets['Cash'].add(trans.value);
@@ -49,12 +49,12 @@ module.exports = class Portfolio {
     console.log('$^^^^$^^^$^^^$\n', this.assets);
   }
 
-  reconcile() {
-    const reconOut = [];
+  async reconcile() {
+    let reconOut = '';
 
-    function addDiffsToResult(amtDiff, symbol) {
+    function addToResult(symbol, amtDiff) {
       if (Math.abs(amtDiff) !== 0) {
-        reconOut.push(symbol + " " + amtDiff);
+        reconOut += symbol + " " + amtDiff + "\n";
       }
     }
 
@@ -62,13 +62,14 @@ module.exports = class Portfolio {
       const amtDiff = this.d1Pos[asset]
         ? this.d1Pos[asset].amount - this.assets[asset].amount
         : -this.assets[asset].amount;
-      addDiffsToResult(amtDiff, this.assets[asset].symbol)
+      addToResult(this.assets[asset].symbol, amtDiff)
       delete this.d1Pos[asset];
     }
 
-    for (let pos in this.d1Pos) {
-      addDiffsToResult(this.d1Pos[pos].amount, this.d1Pos[pos].symbol)
+    for (let asset in this.d1Pos) {
+      addToResult(this.d1Pos[asset].symbol, this.d1Pos[asset].amount)
     }
-    console.log('!!!!', reconOut)
+
+    await this.recData.export(reconOut);
   };
 }

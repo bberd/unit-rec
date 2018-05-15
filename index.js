@@ -1,10 +1,16 @@
-const reconIn = require('./test-data/recon.in.json');
 const Portfolio = require('./classes/portfolio');
 
-console.log('\nreconIn\n', reconIn);
-console.log('\nReconiliation\n', Portfolio);
-const rec = new Portfolio(reconIn);
-rec.parseInput();
-rec.applyTransactions();
-rec.reconcile();
+const init = async () => {
+  try {
+    const port = new Portfolio();
+    await port.parseInput();
+    port.applyTransactionsToD0();
+    await port.reconcile();
+  } catch (err) {
+    console.log('Error occured:\n', err)
+  }
+}
 
+init();
+
+module.exports.init = init;

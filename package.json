@@ -7,6 +7,13 @@
     "start": "node index.js",
     "test": "jest"
   },
+  "config": {
+    "in": "/../test-data/recon.in",
+    "out": "/../test-data/recon.out"
+  },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^22.4.3"
+  }
 }
