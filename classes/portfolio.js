@@ -1,19 +1,19 @@
-
 const RecData = require('./rec-data');
 const Asset = require('./asset');
 
 module.exports = class Portfolio {
   constructor() {
-    this.assets = {};
+    this.d0Pos = {};
     this.d1Pos = {};
     this.d1Trn = [];
     this.recData = new RecData();
+    this.recOutData = '';
   }
 
   async parseInput() {
     await this.recData.import();
     this.recData.parse();
-    this.assets = this.recData.parsedPos.d0Pos;
+    this.d0Pos = this.recData.parsedPos.d0Pos;
     this.d1Pos = this.recData.parsedPos.d1Pos;
     this.d1Trn = this.recData.parsedTrn;
   }
@@ -21,48 +21,47 @@ module.exports = class Portfolio {
   applyTransactionsToD0() {
     const handleTrnCash = trans => {
       if (trans.type === 'DEPOSIT' || trans.type === 'DIVIDEND') {
-        this.assets['Cash'].add(trans.value);
-        // just else here?
+        this.d0Pos['Cash'].add(trans.value);
       } else if (trans.type === 'FEE') {
-        this.assets['Cash'].subtract(trans.value);
+        this.d0Pos['Cash'].subtract(trans.value);
       }
     }
 
     const handleTrnStock = trans => {
       if (trans.type === 'SELL') {
-        this.assets['Cash'].add(trans.value);
-        this.assets[trans.symbol].subtract(trans.shares);
+        this.d0Pos['Cash'].add(trans.value);
+        this.d0Pos[trans.symbol].subtract(trans.shares);
       } else {
-        this.assets['Cash'].subtract(trans.value);
-        this.assets[trans.symbol].add(trans.shares);
+        this.d0Pos['Cash'].subtract(trans.value);
+        this.d0Pos[trans.symbol].add(trans.shares);
       }
     }
 
-    for (let trans of this.d1Trn) {
-      if (!this.assets[trans.symbol]) {
-        this.assets[trans.symbol] = new Asset(trans.symbol, 0);
-      };
-      if (trans.symbol === 'Cash' || trans.type === 'DIVIDEND') handleTrnCash(trans);
-      else handleTrnStock(trans);
+    if (this.d1Trn && this.d1Trn.length) {
+      for (let trans of this.d1Trn) {
+        if (!this.d0Pos[trans.symbol]) {
+          this.d0Pos[trans.symbol] = new Asset(trans.symbol, 0);
+        };
+        if (trans.symbol === 'Cash' || trans.type === 'DIVIDEND') handleTrnCash(trans);
+        else handleTrnStock(trans);
+      }
     }
-
-    console.log('$^^^^$^^^$^^^$\n', this.assets);
   }
 
   async reconcile() {
-    let reconOut = '';
-
-    function addToResult(symbol, amtDiff) {
+    const addToResult = (symbol, amtDiff) => {
       if (Math.abs(amtDiff) !== 0) {
-        reconOut += symbol + " " + amtDiff + "\n";
+        if (symbol === 'Cash') {
+          this.recOutData = symbol + " " + amtDiff + "\n" + this.recOutData
+        } else this.recOutData += symbol + " " + amtDiff + "\n";
       }
     }
 
-    for (let asset in this.assets) {
+    for (let asset in this.d0Pos) {
       const amtDiff = this.d1Pos[asset]
-        ? this.d1Pos[asset].amount - this.assets[asset].amount
-        : -this.assets[asset].amount;
-      addToResult(this.assets[asset].symbol, amtDiff)
+        ? this.d1Pos[asset].amount - this.d0Pos[asset].amount
+        : -this.d0Pos[asset].amount;
+      addToResult(this.d0Pos[asset].symbol, amtDiff)
       delete this.d1Pos[asset];
     }
 
@@ -70,6 +69,6 @@ module.exports = class Portfolio {
       addToResult(this.d1Pos[asset].symbol, this.d1Pos[asset].amount)
     }
 
-    await this.recData.export(reconOut);
+    await this.recData.export(this.recOutData);
   };
 }

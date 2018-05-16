@@ -14,7 +14,7 @@ module.exports = class RecData {
   }
 
   get parsedPos() {
-    return { d0Pos: this.createPos(this.parsedD0Pos), d1Pos: this.createPos(this.parsedD1Pos) }
+    return { d0Pos: this.createPos(this.parsedD0Pos), d1Pos: this.createPos(this.parsedD1Pos) };
   }
 
   get parsedTrn() {
@@ -26,12 +26,12 @@ module.exports = class RecData {
 
     let inputFilenamePathArr = process.argv.find((el) => el.startsWith('in='));
     this.inputFilenamePath = inputFilenamePathArr
-      ? __dirname + inputFilenamePathArr.slice(3, inputFilenamePathArr.length - 1)
+      ? './' + inputFilenamePathArr.slice(3, inputFilenamePathArr.length)
       : this.inputFilenamePath;
 
     let outputFilenamePathArr = process.argv.find((el) => el.startsWith('out='));
     this.outputFilenamePath = outputFilenamePathArr
-      ? __dirname + outputFilenamePathArr.slice(4, outputFilenamePathArr.length - 1)
+      ? './' + outputFilenamePathArr.slice(4, outputFilenamePathArr.length)
       : this.outputFilenamePath;
   }
 
@@ -40,16 +40,6 @@ module.exports = class RecData {
       fs.readFile(this.inputFilenamePath, 'utf8', (err, data) => {
         if (err) reject(err);
         else resolve(data);
-      })
-    });
-  }
-
-  async export(rec) {
-    if (fs.existsSync(this.outputFilenamePath)) fs.unlinkSync(this.outputFilenamePath);
-    await new Promise((resolve, reject) => {
-      fs.appendFile(this.outputFilenamePath, rec, 'utf8', (err) => {
-        if (err) reject(err);
-        else resolve();
       })
     });
   }
@@ -65,7 +55,7 @@ module.exports = class RecData {
 
   createPos(parsedPositions) {
     const assets = {}
-    parsedPositions.map(pos => {
+    parsedPositions && parsedPositions.map(pos => {
       const [symbol, amount] = pos.split(' ');
       assets[symbol] = new Asset(symbol, amount);
     });
@@ -73,9 +63,19 @@ module.exports = class RecData {
   }
 
   createTrn(parsedTransactions) {
-    return parsedTransactions.map(trn => {
+    return parsedTransactions && parsedTransactions.map(trn => {
       const [symbol, code, shares, value] = trn.split(' ');
       return new Transaction(symbol, code, shares, value);
+    });
+  }
+
+  async export(rec) {
+    if (fs.existsSync(this.outputFilenamePath)) fs.unlinkSync(this.outputFilenamePath);
+    await new Promise((resolve, reject) => {
+      fs.appendFile(this.outputFilenamePath, rec, 'utf8', (err) => {
+        if (err) reject(err);
+        else resolve();
+      })
     });
   }
 
