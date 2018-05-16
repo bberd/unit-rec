@@ -1,6 +1,6 @@
-##### **Language**: JavaScript/Node
+#### **Language**: JavaScript/Node
 
-##### **Getting Started**:
+#### **Getting Started**:
 - in the terminal, navigate to the /unit-rec folder and run `npm i` (installs jest for testing)
 - while in /unit-rec:
   - to start with default test file and output location in /unit-rec/test-data: `npm start`
@@ -10,8 +10,7 @@
   - to test: `npm test`
 - entry point: /unit-rec/index.js
 
-##### **Additional Notes**:
+#### **Additional Notes**:
 Since there doesn't appear to be a pattern in the way recon.out rows are ordered:
 - recon.out will always have Cash as the first row
 - all other positions will follow in the order determined by the app
-
